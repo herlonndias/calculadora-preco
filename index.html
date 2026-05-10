@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Calculadora do Preço Certo — Negócio na Prática</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F4F6F0;min-height:100vh;padding:1rem}
+  .wrap{max-width:420px;margin:0 auto}
+  .header{text-align:center;padding:1.5rem 0 1rem}
+  .logo{font-size:12px;font-weight:600;color:#639922;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  .header h1{font-size:22px;font-weight:700;color:#1a1a1a;line-height:1.3}
+  .header p{font-size:14px;color:#666;margin-top:6px}
+  .steps{display:flex;justify-content:center;gap:6px;margin-bottom:1.5rem}
+  .step-dot{width:8px;height:8px;border-radius:50%;background:#D3D1C7;transition:all .25s}
+  .step-dot.active{background:#3B6D11;width:28px;border-radius:4px}
+  .step-dot.done{background:#97C459}
+  .card{background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .card-label{font-size:11px;font-weight:700;color:#3B6D11;text-transform:uppercase;letter-spacing:.8px;margin-bottom:1rem}
+  .field{margin-bottom:1rem}
+  .field:last-child{margin-bottom:0}
+  .field label{display:block;font-size:14px;color:#444;margin-bottom:6px;font-weight:500}
+  .field .hint{font-size:12px;color:#999;margin-top:5px;line-height:1.5}
+  .input-prefix{position:relative;display:flex;align-items:center}
+  .input-prefix .pre{position:absolute;left:12px;font-size:14px;color:#888;pointer-events:none;font-weight:500}
+  .input-prefix input{padding-left:30px}
+  .input-unit{position:relative;display:flex;align-items:center}
+  .input-unit .unit{position:absolute;left:12px;font-size:14px;color:#888;font-weight:500}
+  .input-unit input{padding-left:28px}
+  input[type=number]{width:100%;padding:11px 14px;font-size:16px;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;color:#1a1a1a;-moz-appearance:textfield;transition:border .15s}
+  input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+  input[type=number]:focus{outline:none;border-color:#639922;box-shadow:0 0 0 3px rgba(99,153,34,.12)}
+  .toggle-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1.5px solid #e0e0e0;border-radius:10px;overflow:hidden;margin-bottom:1rem}
+  .toggle-btn{padding:10px 6px;font-size:13px;font-weight:500;border:none;background:#fff;cursor:pointer;color:#666;transition:all .15s}
+  .toggle-btn.active{background:#3B6D11;color:#EAF3DE}
+  .toggle-btn:not(:last-child){border-right:1px solid #e0e0e0}
+  .range-wrap{display:flex;align-items:center;gap:12px}
+  .range-wrap input[type=range]{flex:1;height:4px;accent-color:#3B6D11}
+  .range-val{font-size:18px;font-weight:700;color:#3B6D11;min-width:44px;text-align:right}
+  .btn{width:100%;padding:14px;font-size:16px;font-weight:600;border-radius:12px;border:none;cursor:pointer;transition:all .15s;margin-bottom:8px}
+  .btn:last-child{margin-bottom:0}
+  .btn-primary{background:#3B6D11;color:#EAF3DE}
+  .btn-primary:active{background:#27500A;transform:scale(.98)}
+  .btn-secondary{background:#fff;color:#555;border:1.5px solid #e0e0e0}
+  .btn-secondary:active{background:#f5f5f5}
+  .result-hero{background:#3B6D11;border-radius:16px;padding:1.5rem;text-align:center;margin-bottom:1rem}
+  .result-hero .rlabel{font-size:13px;color:#97C459;margin-bottom:8px;font-weight:500}
+  .result-hero .rvalue{font-size:42px;font-weight:800;color:#EAF3DE;letter-spacing:-1px}
+  .result-hero .rsub{font-size:13px;color:#9FE1CB;margin-top:6px}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+  .result-item{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:.9rem;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .result-item .ril{font-size:11px;color:#999;margin-bottom:5px;font-weight:500}
+  .result-item .riv{font-size:20px;font-weight:700;color:#1a1a1a}
+  .result-item.ok .riv{color:#3B6D11}
+  .result-item.warn .riv{color:#BA7517}
+  .result-item.danger .riv{color:#A32D2D}
+  .alert{padding:.9rem 1rem;border-radius:12px;font-size:14px;margin-bottom:1rem;border-left:4px solid;line-height:1.5;font-weight:500}
+  .alert-ok{background:#EAF3DE;color:#3B6D11;border-color:#639922}
+  .alert-warn{background:#FAEEDA;color:#854F0B;border-color:#EF9F27}
+  .alert-danger{background:#FCEBEB;color:#A32D2D;border-color:#E24B4A}
+  .breakdown{background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:1.25rem;margin-bottom:1rem}
+  .breakdown-title{font-size:11px;font-weight:700;color:#3B6D11;text-transform:uppercase;letter-spacing:.8px;margin-bottom:.9rem}
+  .brow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:14px;color:#555}
+  .brow:last-child{border:none;font-weight:700;color:#1a1a1a;padding-top:10px;font-size:15px}
+  .brow span:last-child{color:#1a1a1a;font-weight:600}
+  .brow.total span:last-child{color:#3B6D11}
+  .footer{text-align:center;font-size:11px;color:#bbb;padding:1rem 0 .5rem;letter-spacing:.3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="logo">Negócio na Prática</div>
+    <h1>Calculadora do Preço Certo</h1>
+    <p>Descubra quanto cobrar para nunca trabalhar no prejuízo</p>
+  </div>
+  <div class="steps" id="steps"></div>
+  <div id="screen"></div>
+  <div class="footer">Escola Negócio na Prática • escolanegocionapratica.com</div>
+</div>
+
+<script>
+const s = {step:0,tipo:'produto',custo:'',tempo:'',valorHora:'',fixos:'',qtd:'',margem:30}
+const N = 4
+
+function fmt(n){
+  return 'R$ ' + Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})
+}
+
+function calc(){
+  const custo=parseFloat(s.custo)||0
+  const tempo=parseFloat(s.tempo)||0
+  const vh=parseFloat(s.valorHora)||0
+  const fixos=parseFloat(s.fixos)||0
+  const qtd=parseFloat(s.qtd)||1
+  const m=s.margem/100
+  const mao=tempo*vh
+  const fixoUnit=qtd>0?fixos/qtd:0
+  const total=custo+mao+fixoUnit
+  const ideal=m<1?total/(1-m):total*2
+  const margemReal=ideal>0?(ideal-total)/ideal*100:0
+  return{custo,mao,fixoUnit,total,ideal,margemReal}
+}
+
+function renderSteps(){
+  document.getElementById('steps').innerHTML=
+    Array.from({length:N},(_,i)=>{
+      const c=i<s.step?'done':i===s.step?'active':''
+      return `<div class="step-dot ${c}"></div>`
+    }).join('')
+}
+
+function screen(){
+  const screens=[
+    ()=>`
+      <div class="card">
+        <div class="card-label">O que você vende?</div>
+        <div class="toggle-wrap">
+          <button class="toggle-btn ${s.tipo==='produto'?'active':''}" onclick="s.tipo='produto';render()">Produto</button>
+          <button class="toggle-btn ${s.tipo==='servico'?'active':''}" onclick="s.tipo='servico';render()">Serviço</button>
+          <button class="toggle-btn ${s.tipo==='ambos'?'active':''}" onclick="s.tipo='ambos';render()">Ambos</button>
+        </div>
+        <div class="field">
+          <label>Custo dos materiais / insumos</label>
+          <div class="input-prefix"><span class="pre">R$</span>
+            <input type="number" inputmode="decimal" placeholder="0,00" value="${s.custo}" oninput="s.custo=this.value">
+          </div>
+          <div class="hint">${s.tipo==='servico'?'Materiais consumidos no serviço (shampoo, tinta, embalagem...)':'Quanto você paga para fabricar ou comprar o produto para revender'}</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="next()">Continuar →</button>
+    `,
+    ()=>`
+      <div class="card">
+        <div class="card-label">Seu tempo vale dinheiro</div>
+        <div class="field">
+          <label>Quanto tempo você leva? (em horas)</label>
+          <div class="input-unit"><span class="unit">h</span>
+            <input type="number" inputmode="decimal" placeholder="0" value="${s.tempo}" oninput="s.tempo=this.value">
+          </div>
+          <div class="hint">Deixe 0 se não se aplica ao seu caso</div>
+        </div>
+        <div class="field">
+          <label>Quanto vale sua hora de trabalho?</label>
+          <div class="input-prefix"><span class="pre">R$</span>
+            <input type="number" inputmode="decimal" placeholder="0,00" value="${s.valorHora}" oninput="s.valorHora=this.value">
+          </div>
+          <div class="hint">Quer ganhar R$3.000/mês em 150h de trabalho? → R$20/h</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="next()">Continuar →</button>
+      <button class="btn btn-secondary" onclick="back()">← Voltar</button>
+    `,
+    ()=>`
+      <div class="card">
+        <div class="card-label">Custos fixos do negócio</div>
+        <div class="field">
+          <label>Total dos custos fixos por mês</label>
+          <div class="input-prefix"><span class="pre">R$</span>
+            <input type="number" inputmode="decimal" placeholder="0,00" value="${s.fixos}" oninput="s.fixos=this.value">
+          </div>
+          <div class="hint">Aluguel + luz + internet + salários + etc. Deixe 0 se não souber agora.</div>
+        </div>
+        <div class="field">
+          <label>Quantos produtos/serviços você vende por mês?</label>
+          <div class="input-unit"><span class="unit" style="font-size:13px">#</span>
+            <input type="number" inputmode="decimal" placeholder="0" value="${s.qtd}" oninput="s.qtd=this.value">
+          </div>
+          <div class="hint">Para dividir os custos fixos entre cada venda</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="next()">Continuar →</button>
+      <button class="btn btn-secondary" onclick="back()">← Voltar</button>
+    `,
+    ()=>{
+      const r=calc()
+      const ac=r.margemReal>=30?'alert-ok':r.margemReal>=15?'alert-warn':'alert-danger'
+      const ic=r.margemReal>=30?'ok':r.margemReal>=15?'warn':'danger'
+      const msg=r.margemReal>=30?'Ótima margem! Você está precificando com saúde financeira.':r.margemReal>=15?'Margem razoável. Tente chegar a pelo menos 30% para ter mais segurança.':'Margem muito baixa. Revise seus custos ou aumente o preço.'
+      return`
+      <div class="card">
+        <div class="card-label">Margem de lucro desejada</div>
+        <div class="range-wrap">
+          <input type="range" min="5" max="70" step="1" value="${s.margem}" oninput="s.margem=parseInt(this.value);render()">
+          <span class="range-val">${s.margem}%</span>
+        </div>
+      </div>
+      <div class="result-hero">
+        <div class="rlabel">Preço ideal para cobrar</div>
+        <div class="rvalue">${fmt(r.ideal)}</div>
+        <div class="rsub">com ${s.margem}% de margem de lucro</div>
+      </div>
+      <div class="result-grid">
+        <div class="result-item">
+          <div class="ril">Preço mínimo</div>
+          <div class="riv">${fmt(r.total)}</div>
+        </div>
+        <div class="result-item ${ic}">
+          <div class="ril">Margem real</div>
+          <div class="riv">${r.margemReal.toFixed(1)}%</div>
+        </div>
+      </div>
+      <div class="alert ${ac}">${msg}</div>
+      <div class="breakdown">
+        <div class="breakdown-title">Como o preço é composto</div>
+        ${r.custo>0?`<div class="brow"><span>Materiais / insumos</span><span>${fmt(r.custo)}</span></div>`:''}
+        ${r.mao>0?`<div class="brow"><span>Mão de obra (${s.tempo}h × ${fmt(parseFloat(s.valorHora)||0)})</span><span>${fmt(r.mao)}</span></div>`:''}
+        ${r.fixoUnit>0?`<div class="brow"><span>Rateio dos custos fixos</span><span>${fmt(r.fixoUnit)}</span></div>`:''}
+        <div class="brow"><span>Custo total</span><span>${fmt(r.total)}</span></div>
+        <div class="brow total"><span>Lucro (${s.margem}%)</span><span>${fmt(r.ideal-r.total)}</span></div>
+      </div>
+      <button class="btn btn-secondary" onclick="reset()">← Calcular outro produto</button>
+    `}
+  ]
+  return screens[s.step]()
+}
+
+function render(){renderSteps();document.getElementById('screen').innerHTML=screen()}
+function next(){if(s.step<N-1){s.step++;render()}}
+function back(){if(s.step>0){s.step--;render()}}
+function reset(){Object.assign(s,{step:0,tipo:'produto',custo:'',tempo:'',valorHora:'',fixos:'',qtd:'',margem:30});render()}
+
+render()
+</script>
+</body>
+</html>
